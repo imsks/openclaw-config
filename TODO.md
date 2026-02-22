@@ -8,20 +8,19 @@
 - [x] Config sync to project repo (zsh precmd hook)
 - [x] Set workspace to Rajniti project
 - [x] Update USER.md with project context
-- [x] Create glm-4.7-flash-16k custom model (context-limited for 24GB M4)
+- [x] Create custom Ollama models (glm-4.7-flash-16k, qwen2.5-7b-32k)
+- [x] GitHub CLI auth (`gh auth login`)
+- [x] Switch to qwen2.5-7b-32k (tool support + performance)
+- [x] Configure TOOLS.md with routing rules (general vs coding)
 
 ## In Progress
 
-- [ ] Pull gemma3:4b (lightweight routing model for 24GB M4)
-- [x] GitHub CLI auth (`gh auth login`)
-- [x] Enable exec tool (`tools.exec.security: "allowlist"`)
-- [x] Allowlist CLI commands: `claude`, `gh`, `agent`
-- [ ] Configure OpenClaw to use gemma3:4b as primary model
-- [ ] Test end-to-end: WhatsApp → agent → Claude Code on Rajniti
+- [ ] Test general question routing ("What's the tech stack of Rajniti?")
+- [ ] Test coding task routing (spawn Claude Code via coding-agent skill)
 
 ## Next Up — Personal Workspace
 
-- [ ] Test coding-agent: send WhatsApp message → spawns Claude Code on Rajniti
+- [ ] Test end-to-end: WhatsApp → coding-agent → Claude Code on Rajniti
 - [ ] Test github skill: "check CI status", "list open issues"
 - [ ] Set up cron: daily CI status summary (9am)
 - [ ] Set up cron: weekly open issues digest (Monday 9am)
@@ -29,28 +28,27 @@
 ## Future — Extensibility
 
 - [ ] **Notion integration** — via Claude Code MCP server (`@modelcontextprotocol/server-notion`)
-- [ ] **TBE workspace** — add second workspace/agent when ready
+- [ ] **TBE workspace** — add project to TOOLS.md + USER.md when ready
 - [ ] **Office workspace** — add Jira + Slack integrations
 - [ ] **Multi-agent** — separate agents per workspace if needed (`openclaw agents add`)
 - [ ] **Gemini API** — upgrade from Ollama to Gemini free tier if local model quality is insufficient
 - [ ] **PR auto-review** — cron job to review new PRs with Claude Code via git worktree
 
-## Architecture Notes
+## Architecture
 
 ```
 WhatsApp message
   → OpenClaw Gateway (port 18789)
-    → gemma3:4b (intent routing, light responses)
-      ├─ coding task → spawns Claude Code (`claude -p "..." --add-dir /path`)
+    → qwen2.5-7b-32k (reads TOOLS.md for routing)
+      ├─ general question → answers directly from USER.md context
+      ├─ coding task → coding-agent skill → bash pty:true → claude '<task>'
       ├─ github task → gh CLI (issues, PRs, CI)
-      ├─ notion task → Claude Code MCP (future)
-      └─ simple chat → responds directly
+      └─ notion task → Claude Code MCP (future)
 ```
 
-- **Model strategy:** gemma3:4b handles routing + simple replies (fast, 3GB).
-  Claude Code handles heavy coding (cloud, high quality). Best of both worlds.
-- **Workspace:** pointed at Rajniti. To add repos, update USER.md — no config changes needed.
-- **Config sync:** `~/.openclaw/openclaw.json` auto-syncs to this repo via zsh precmd hook.
+- **Routing:** Defined in TOOLS.md. Bot decides general vs coding based on message intent.
+- **No per-project scripts.** The coding-agent skill handles spawning Claude Code with the right workdir.
+- **Extensibility:** New project = one row in TOOLS.md + one section in USER.md.
 
 ## Commands Cheat Sheet
 
@@ -70,15 +68,13 @@ openclaw tui                                       # terminal chat UI
 
 # Cron
 openclaw cron list                                 # list jobs
-openclaw cron add --every "9am" --message "..."    # add job
+openclaw cron add --cron "0 9 * * *" --tz "Asia/Kolkata" --name "job" --message "..."
 
 # Skills
-openclaw skills list --eligible                    # what's available
-openclaw skills info <name>                        # skill details
+openclaw skills list                               # what's available
 
 # Memory
 openclaw memory status --deep                      # check embeddings
-openclaw memory index --force                      # reindex
 
 # Logs
 tail -f /tmp/openclaw/openclaw-$(date +%Y-%m-%d).log | python3 -c "

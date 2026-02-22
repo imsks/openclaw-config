@@ -1,50 +1,71 @@
 {
+  "meta": {
+    "lastTouchedVersion": "2026.2.21-2",
+    "lastTouchedAt": "2026-02-22T14:42:02.854Z"
+  },
+  "wizard": {
+    "lastRunAt": "2026-02-22T12:01:41.185Z",
+    "lastRunVersion": "2026.2.21-2",
+    "lastRunCommand": "onboard",
+    "lastRunMode": "local"
+  },
+  "models": {
+    "providers": {
+      "ollama": {
+        "baseUrl": "http://127.0.0.1:11434/v1",
+        "apiKey": "ollama-local",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "qwen2.5-7b-32k",
+            "name": "qwen2.5-7b-32k",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 32768,
+            "maxTokens": 1024
+          }
+        ]
+      }
+    }
+  },
   "agents": {
     "defaults": {
-      "memorySearch": {
-        "enabled": true,
-        "provider": "local"
-      },
       "model": {
         "primary": "ollama/qwen2.5-7b-32k"
       },
-      "workspace": "/Users/sacmini/.openclaw/workspace"
+      "workspace": "/Users/sacmini/.openclaw/workspace",
+      "memorySearch": {
+        "enabled": true,
+        "provider": "local"
+      }
     }
   },
-  "channels": {
-    "whatsapp": {
-      "ackReaction": {
-        "direct": true,
-        "group": "never"
+  "tools": {
+    "web": {
+      "search": {
+        "enabled": true
       },
-      "allowFrom": [
-        "+918072937581"
-      ],
-      "debounceMs": 0,
-      "dmPolicy": "allowlist",
-      "groupPolicy": "allowlist",
-      "mediaMaxMb": 50,
-      "selfChatMode": true
+      "fetch": {
+        "enabled": true
+      }
+    },
+    "exec": {
+      "security": "allowlist"
     }
   },
   "commands": {
     "native": "auto",
     "nativeSkills": "auto",
-    "ownerDisplay": "raw",
-    "restart": true
-  },
-  "gateway": {
-    "auth": {
-      "mode": "token",
-      "token": "1be201add271a09e18dfa77ada871395177ea3a2d5f39e9b"
-    },
-    "bind": "loopback",
-    "mode": "local",
-    "port": 18789,
-    "tailscale": {
-      "mode": "off",
-      "resetOnExit": false
-    }
+    "restart": true,
+    "ownerDisplay": "raw"
   },
   "hooks": {
     "internal": {
@@ -65,35 +86,33 @@
       }
     }
   },
-  "meta": {
-    "lastTouchedAt": "2026-02-22T12:15:19.173Z",
-    "lastTouchedVersion": "2026.2.21-2"
+  "channels": {
+    "whatsapp": {
+      "dmPolicy": "allowlist",
+      "selfChatMode": true,
+      "allowFrom": [
+        "+918072937581"
+      ],
+      "groupPolicy": "allowlist",
+      "ackReaction": {
+        "direct": true,
+        "group": "never"
+      },
+      "debounceMs": 0,
+      "mediaMaxMb": 50
+    }
   },
-  "models": {
-    "providers": {
-      "ollama": {
-        "api": "openai-completions",
-        "apiKey": "ollama-local",
-        "baseUrl": "http://127.0.0.1:11434/v1",
-        "models": [
-          {
-            "contextWindow": 32768,
-            "cost": {
-              "cacheRead": 0,
-              "cacheWrite": 0,
-              "input": 0,
-              "output": 0
-            },
-            "id": "qwen2.5-7b-32k",
-            "input": [
-              "text"
-            ],
-            "maxTokens": 1024,
-            "name": "qwen2.5-7b-32k",
-            "reasoning": false
-          }
-        ]
-      }
+  "gateway": {
+    "port": 18789,
+    "mode": "local",
+    "bind": "loopback",
+    "auth": {
+      "mode": "token",
+      "token": "1be201add271a09e18dfa77ada871395177ea3a2d5f39e9b"
+    },
+    "tailscale": {
+      "mode": "off",
+      "resetOnExit": false
     }
   },
   "plugins": {
@@ -102,21 +121,5 @@
         "enabled": true
       }
     }
-  },
-  "tools": {
-    "web": {
-      "fetch": {
-        "enabled": true
-      },
-      "search": {
-        "enabled": true
-      }
-    }
-  },
-  "wizard": {
-    "lastRunAt": "2026-02-22T12:01:41.185Z",
-    "lastRunCommand": "onboard",
-    "lastRunMode": "local",
-    "lastRunVersion": "2026.2.21-2"
   }
 }
