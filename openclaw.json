@@ -6,7 +6,7 @@
         "provider": "local"
       },
       "model": {
-        "primary": "ollama/gemma3-4b-16k"
+        "primary": "ollama/qwen2.5-7b-32k"
       },
       "workspace": "/Users/sacmini/.openclaw/workspace"
     }
@@ -77,19 +77,19 @@
         "baseUrl": "http://127.0.0.1:11434/v1",
         "models": [
           {
-            "contextWindow": 16384,
+            "contextWindow": 32768,
             "cost": {
               "cacheRead": 0,
               "cacheWrite": 0,
               "input": 0,
               "output": 0
             },
-            "id": "gemma3-4b-16k",
+            "id": "qwen2.5-7b-32k",
             "input": [
               "text"
             ],
             "maxTokens": 1024,
-            "name": "gemma3-4b-16k",
+            "name": "qwen2.5-7b-32k",
             "reasoning": false
           }
         ]

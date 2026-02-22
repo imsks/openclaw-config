@@ -14,6 +14,8 @@
 
 - [ ] Pull gemma3:4b (lightweight routing model for 24GB M4)
 - [x] GitHub CLI auth (`gh auth login`)
+- [x] Enable exec tool (`tools.exec.security: "allowlist"`)
+- [x] Allowlist CLI commands: `claude`, `gh`, `agent`
 - [ ] Configure OpenClaw to use gemma3:4b as primary model
 - [ ] Test end-to-end: WhatsApp → agent → Claude Code on Rajniti
 
