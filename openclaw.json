@@ -6,7 +6,7 @@
         "provider": "local"
       },
       "model": {
-        "primary": "ollama/glm-4.7-flash-4k"
+        "primary": "ollama/gemma3-4b-16k"
       },
       "workspace": "/Users/sacmini/.openclaw/workspace"
     }
@@ -77,19 +77,19 @@
         "baseUrl": "http://127.0.0.1:11434/v1",
         "models": [
           {
-            "contextWindow": 4096,
+            "contextWindow": 16384,
             "cost": {
               "cacheRead": 0,
               "cacheWrite": 0,
               "input": 0,
               "output": 0
             },
-            "id": "glm-4.7-flash-4k",
+            "id": "gemma3-4b-16k",
             "input": [
               "text"
             ],
             "maxTokens": 1024,
-            "name": "glm-4.7-flash-4k",
+            "name": "gemma3-4b-16k",
             "reasoning": false
           }
         ]
