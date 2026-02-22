@@ -1,131 +1,115 @@
 {
-  "meta": {
-    "lastTouchedVersion": "2026.2.21-2",
-    "lastTouchedAt": "2026-02-22T12:15:19.173Z"
-  },
-  "wizard": {
-    "lastRunAt": "2026-02-22T12:01:41.185Z",
-    "lastRunVersion": "2026.2.21-2",
-    "lastRunCommand": "onboard",
-    "lastRunMode": "local"
-  },
-  "models": {
-    "providers": {
-      "ollama": {
-        "baseUrl": "http://127.0.0.1:11434/v1",
-        "apiKey": "ollama-local",
-        "api": "openai-completions",
-        "models": [
-          {
-            "id": "qwen3-coder",
-            "name": "qwen3-coder",
-            "reasoning": false,
-            "input": [
-              "text"
-            ],
-            "cost": {
-              "input": 0,
-              "output": 0,
-              "cacheRead": 0,
-              "cacheWrite": 0
-            },
-            "contextWindow": 131072,
-            "maxTokens": 16384
-          },
-          {
-            "id": "glm-4.7-flash",
-            "name": "glm-4.7-flash",
-            "reasoning": false,
-            "input": [
-              "text"
-            ],
-            "cost": {
-              "input": 0,
-              "output": 0,
-              "cacheRead": 0,
-              "cacheWrite": 0
-            },
-            "contextWindow": 131072,
-            "maxTokens": 16384
-          }
-        ]
-      }
-    }
-  },
   "agents": {
     "defaults": {
-      "model": {
-        "primary": "ollama/qwen3-coder"
-      },
-      "workspace": "/Users/sacmini/.openclaw/workspace",
       "memorySearch": {
         "enabled": true,
         "provider": "local"
-      }
+      },
+      "model": {
+        "primary": "ollama/qwen3-coder"
+      },
+      "workspace": "/Users/sacmini/.openclaw/workspace"
     }
   },
-  "tools": {
-    "web": {
-      "search": {
-        "enabled": true
+  "channels": {
+    "whatsapp": {
+      "ackReaction": {
+        "direct": true,
+        "group": "never"
       },
-      "fetch": {
-        "enabled": true
-      }
+      "allowFrom": [
+        "+918072937581"
+      ],
+      "debounceMs": 0,
+      "dmPolicy": "allowlist",
+      "groupPolicy": "allowlist",
+      "mediaMaxMb": 50,
+      "selfChatMode": true
     }
   },
   "commands": {
     "native": "auto",
     "nativeSkills": "auto",
-    "restart": true,
-    "ownerDisplay": "raw"
+    "ownerDisplay": "raw",
+    "restart": true
+  },
+  "gateway": {
+    "auth": {
+      "mode": "token",
+      "token": "1be201add271a09e18dfa77ada871395177ea3a2d5f39e9b"
+    },
+    "bind": "loopback",
+    "mode": "local",
+    "port": 18789,
+    "tailscale": {
+      "mode": "off",
+      "resetOnExit": false
+    }
   },
   "hooks": {
     "internal": {
       "enabled": true,
       "entries": {
-        "session-memory": {
-          "enabled": true
-        },
-        "command-logger": {
+        "boot-md": {
           "enabled": true
         },
         "bootstrap-extra-files": {
           "enabled": true
         },
-        "boot-md": {
+        "command-logger": {
+          "enabled": true
+        },
+        "session-memory": {
           "enabled": true
         }
       }
     }
   },
-  "channels": {
-    "whatsapp": {
-      "dmPolicy": "allowlist",
-      "selfChatMode": true,
-      "allowFrom": [
-        "+918072937581"
-      ],
-      "groupPolicy": "allowlist",
-      "ackReaction": {
-        "direct": true,
-        "group": "never"
-      },
-      "debounceMs": 0,
-      "mediaMaxMb": 50
-    }
+  "meta": {
+    "lastTouchedAt": "2026-02-22T12:15:19.173Z",
+    "lastTouchedVersion": "2026.2.21-2"
   },
-  "gateway": {
-    "port": 18789,
-    "mode": "local",
-    "bind": "loopback",
-    "auth": {
-      "mode": "token",
-      "token": "1be201add271a09e18dfa77ada871395177ea3a2d5f39e9b"
-    },
-    "tailscale": {
-      "mode": "off",
-      "resetOnExit": false
+  "models": {
+    "providers": {
+      "ollama": {
+        "api": "openai-completions",
+        "apiKey": "ollama-local",
+        "baseUrl": "http://127.0.0.1:11434/v1",
+        "models": [
+          {
+            "contextWindow": 131072,
+            "cost": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 0,
+              "output": 0
+            },
+            "id": "qwen3-coder",
+            "input": [
+              "text"
+            ],
+            "maxTokens": 16384,
+            "name": "qwen3-coder",
+            "reasoning": false
+          },
+          {
+            "contextWindow": 131072,
+            "cost": {
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "input": 0,
+              "output": 0
+            },
+            "id": "glm-4.7-flash",
+            "input": [
+              "text"
+            ],
+            "maxTokens": 16384,
+            "name": "glm-4.7-flash",
+            "reasoning": false
+          }
+        ]
+      }
     }
   },
   "plugins": {
@@ -134,5 +118,21 @@
         "enabled": true
       }
     }
+  },
+  "tools": {
+    "web": {
+      "fetch": {
+        "enabled": true
+      },
+      "search": {
+        "enabled": true
+      }
+    }
+  },
+  "wizard": {
+    "lastRunAt": "2026-02-22T12:01:41.185Z",
+    "lastRunCommand": "onboard",
+    "lastRunMode": "local",
+    "lastRunVersion": "2026.2.21-2"
   }
 }
