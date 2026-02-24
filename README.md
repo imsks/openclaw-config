@@ -113,12 +113,22 @@ openclaw-sync   # Manual sync alias
 
 ## Cron Jobs
 
-```bash
-# Daily CI check at 9am
-openclaw cron add --every "9am" --message "Check Rajniti CI status on GitHub Actions and summarize any failures" --announce
+| Job | Schedule | What it does |
+|-----|----------|--------------|
+| **openclaw-heartbeat** | Every hour | Keeps the model warm; agent reply (e.g. "OK") is sent to WhatsApp. |
+| **meetings-today-8am** | 8:00 AM IST daily | Runs `~/.openclaw/scripts/today-meetings.sh`, sends "How many meetings today" to WhatsApp. |
+| rajniti-ci-daily | 9:00 AM IST | CI status summary |
+| rajniti-issues-weekly | Monday 9:00 AM IST | Open issues digest |
 
-# Weekly issues digest on Monday
-openclaw cron add --at "monday 9am" --message "List all open GitHub issues for Rajniti with priorities" --announce
+**8 AM meetings script:** Uses macOS Calendar.app via AppleScript. Ensure Calendar is allowed in **System Settings → Privacy & Security → Calendar**. Script: `~/.openclaw/scripts/today-meetings.sh` (copy in repo `scripts/`).
+
+**Run a job by ID (not by name):** Agent jobs need a longer timeout (model can take 1–2 min).
+```bash
+openclaw cron list   # first column is the job ID
+# Run meetings job now (use the ID from the list; --timeout 120000 = 2 min):
+openclaw cron run 00166402-8bfa-40c3-aa42-d7487a65752e --timeout 120000
+# Run heartbeat now:
+openclaw cron run 149d5320-243c-40cd-af19-b84dec2c40c1 --timeout 120000
 ```
 
 ## Troubleshooting
