@@ -11,6 +11,7 @@
 - [x] Create custom Ollama models (glm-4.7-flash-16k, qwen2.5-7b-32k)
 - [x] GitHub CLI auth (`gh auth login`)
 - [x] Switch to qwen2.5-7b-32k (tool support + performance)
+- [x] Switch to qwen3:8b (8.2B params, 40k context, tool calling)
 - [x] Enable exec tool (`tools.exec.security: "allowlist"`)
 - [x] Configure TOOLS.md with routing rules (general vs coding)
 - [x] Test general question routing (answered from USER.md context)
@@ -27,6 +28,10 @@
 - [x] Set up cron: daily CI status summary (9am IST) — `rajniti-ci-daily`
 - [x] Set up cron: weekly open issues digest (Monday 9am IST) — `rajniti-issues-weekly`
 - [x] Test end-to-end: WhatsApp → coding-agent → Cursor agent on Rajniti (message delivered)
+- [x] Ollama keepalive LaunchAgent (hourly heartbeat, 24h `keep_alive`)
+- [x] Increase maxTokens to 4096 for longer responses
+- [x] Create `test-model.sh` — reusable 5-test validation suite for model swaps
+- [x] qwen3:8b full test pass (simple query, reasoning, GitHub, Claude Code, Cursor exec)
 
 ## Next Up
 
@@ -39,7 +44,7 @@
 - [ ] **Office workspace** — add repos + Jira/Slack integrations
 - [ ] **Notion integration** — via MCP server (`@modelcontextprotocol/server-notion`)
 - [ ] **Browser automation** — headless Chromium for cron tasks + testing
-- [ ] **Gemini Flash** — upgrade routing model if qwen2.5-7b quality is insufficient
+- [ ] **Gemini Flash** — upgrade routing model if qwen3:8b quality is insufficient
 - [ ] **PR auto-review** — cron job to review new PRs with Cursor agent via git worktree
 
 ## Architecture
@@ -48,7 +53,7 @@
 WhatsApp message
   → OpenClaw Gateway (port 18789)
     → Route to agent (main / tbe / office)
-      → qwen2.5-7b-32k (reads TOOLS.md for routing)
+      → qwen3:8b (reads TOOLS.md for routing)
         ├─ general question → answers directly from USER.md context
         ├─ coding task → coding-agent skill → cursor agent -p '<task>' --yolo
         ├─ github task → gh CLI (issues, PRs, CI)
@@ -67,6 +72,10 @@ Agents:
 ## Commands Cheat Sheet
 
 ```bash
+# Model Testing
+./test-model.sh                                    # run 5-test suite on current model
+./test-model.sh ollama/qwen3:8b                    # run with explicit model name
+
 # Gateway
 openclaw gateway stop && openclaw gateway install  # restart
 openclaw gateway status                            # check health
