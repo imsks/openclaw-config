@@ -55,15 +55,13 @@
         "id": "tbe",
         "name": "tbe",
         "workspace": "/Users/sacmini/.openclaw/workspaces/tbe",
-        "agentDir": "/Users/sacmini/.openclaw/agents/tbe/agent",
-        "model": "ollama/qwen2.5-7b-32k"
+        "agentDir": "/Users/sacmini/.openclaw/agents/tbe/agent"
       },
       {
         "id": "office",
         "name": "office",
         "workspace": "/Users/sacmini/.openclaw/workspaces/office",
-        "agentDir": "/Users/sacmini/.openclaw/agents/office/agent",
-        "model": "ollama/qwen2.5-7b-32k"
+        "agentDir": "/Users/sacmini/.openclaw/agents/office/agent"
       }
     ]
   },

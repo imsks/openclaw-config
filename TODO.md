@@ -32,19 +32,28 @@
 - [x] Increase maxTokens to 4096 for longer responses
 - [x] Create `test-model.sh` — reusable 5-test validation suite for model swaps
 - [x] qwen3:8b full test pass (simple query, reasoning, GitHub, Claude Code, Cursor exec)
+- [x] Cursor agent output relayed back through WhatsApp (synchronous exec + `--print`)
+- [x] Cleaned up crons — removed meetings-8am, ci-daily, issues-weekly; only heartbeat remains
+- [x] Added Ollama.app to macOS Login Items (auto-start on boot)
+- [x] Switched Cursor agent model from `auto` to `opus-4.6-thinking`
+- [x] Created MEMORY.md with long-term curated memory (decisions, architecture, lessons)
+- [x] Set up HEARTBEAT.md with periodic health checks (gateway, Ollama, memory maintenance)
+- [x] Unified all agents to qwen3:8b (removed qwen2.5-7b-32k overrides on tbe/office)
+- [x] Synced openclaw.json to production-ready state
 
 ## Next Up
 
 - [ ] GitHub PR creation flow: Cursor agent makes changes → gh pr create
-- [ ] Get Cursor agent to return results back through WhatsApp (monitor + relay output)
+- [ ] Install `session-logs` skill for querying past agent sessions and generating reports
 
 ## Future — Extensibility
 
+- [ ] **Cloud routing LLM** — swap qwen3:8b for Groq (free tier, 14,400 req/day) or Gemini Flash ($0.10/M). Config change only: add provider to `models.providers`, update `agents.defaults.model.primary`
+- [ ] **Daily reports** — cron job that summarizes what the agent did (uses session-logs + MEMORY.md)
 - [ ] **TBE workspace** — add repos to tbe agent when ready
 - [ ] **Office workspace** — add repos + Jira/Slack integrations
 - [ ] **Notion integration** — via MCP server (`@modelcontextprotocol/server-notion`)
 - [ ] **Browser automation** — headless Chromium for cron tasks + testing
-- [ ] **Gemini Flash** — upgrade routing model if qwen3:8b quality is insufficient
 - [ ] **PR auto-review** — cron job to review new PRs with Cursor agent via git worktree
 
 ## Architecture
@@ -55,7 +64,7 @@ WhatsApp message
     → Route to agent (main / tbe / office)
       → qwen3:8b (reads TOOLS.md for routing)
         ├─ general question → answers directly from USER.md context
-        ├─ coding task → coding-agent skill → cursor agent -p '<task>' --yolo
+        ├─ coding task → ack → cursor agent --model opus-4.6-thinking --print → output back to WhatsApp
         ├─ github task → gh CLI (issues, PRs, CI)
         └─ browser task → headless Chromium (future)
 
@@ -65,7 +74,7 @@ Agents:
   office          → ~/.openclaw/workspaces/office → TBD
 ```
 
-- **Coding agent:** Cursor CLI (`cursor agent -p --yolo --model auto`). Uses Cursor subscription — zero extra API cost.
+- **Coding agent:** Cursor CLI (`cursor agent --model opus-4.6-thinking --print`). Runs synchronously, output relayed to WhatsApp. Uses Cursor subscription — zero extra API cost.
 - **Routing:** Defined in each agent's TOOLS.md. Bot decides general vs coding based on message intent.
 - **Extensibility:** New project = one row in TOOLS.md + one section in USER.md.
 
@@ -98,7 +107,7 @@ openclaw cron list                                 # list jobs
 openclaw cron add --cron "0 9 * * *" --tz "Asia/Kolkata" --name "job" --message "..."
 
 # Cursor Agent (manual)
-cursor agent -p "task" --workspace /path --yolo --model auto
+cursor agent -p "task" --workspace /path --yolo --model opus-4.6-thinking --print
 
 # Skills
 openclaw skills list                               # what's available
