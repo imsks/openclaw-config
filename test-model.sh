@@ -5,6 +5,16 @@
 # Useful when swapping models to validate capabilities before committing.
 set -euo pipefail
 
+TIMEOUT_CMD="timeout"
+if ! command -v timeout &>/dev/null; then
+  if command -v gtimeout &>/dev/null; then
+    TIMEOUT_CMD="gtimeout"
+  else
+    echo "❌ 'timeout' not found. Install GNU coreutils: brew install coreutils"
+    exit 1
+  fi
+fi
+
 PHONE="+918072937581"
 REPO="imsks/Rajniti"
 RAJNITI_PATH="/Users/sacmini/Documents/Codebase/Personal/Rajniti"
@@ -23,7 +33,7 @@ run_test() {
 
   local start_ms=$(($(date +%s) * 1000))
   local output
-  output=$(timeout "$timeout" openclaw agent \
+  output=$($TIMEOUT_CMD "$timeout" openclaw agent \
     --to "$PHONE" \
     --message "$msg" \
     --deliver \
