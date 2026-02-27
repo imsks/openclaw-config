@@ -57,6 +57,25 @@ gh auth login --web --git-protocol https
 openclaw gateway install   # macOS LaunchAgent, auto-starts on login
 ```
 
+### 6. (Optional) Web search — Brave Search API
+
+The `web_search` tool needs a **Brave Search API key**. Without it, the agent will report that the tool requires configuration.
+
+1. **Get a key:** [brave.com/search/api](https://brave.com/search/api) → sign up → choose **Data for Search** (not "Data for AI") → create an API key. Free tier: 2,000 requests/month.
+
+2. **Configure OpenClaw** (saves to `~/.openclaw/openclaw.json`):
+   ```bash
+   openclaw configure --section web
+   ```
+   Enter your Brave API key when prompted.
+
+3. **Or set via environment:** put `BRAVE_API_KEY=your_key_here` in the gateway environment (e.g. in the LaunchAgent plist or in `~/.openclaw/.env` if you load it before starting the gateway).
+
+4. **Restart the gateway** so it picks up the new config:
+   ```bash
+   openclaw gateway stop && openclaw gateway install
+   ```
+
 ## Skills
 
 | Skill | Trigger (WhatsApp message example) | What happens |
@@ -117,32 +136,129 @@ openclaw cron run 149d5320-243c-40cd-af19-b84dec2c40c1 --timeout 120000
 
 ## Auto-Restart (Power Failure Recovery)
 
-All components auto-start on boot:
+### Boot chain
 
-| Component | Mechanism |
-|-----------|-----------|
-| **Ollama** | macOS Login Items (`Ollama.app`, hidden) |
-| **OpenClaw Gateway** | LaunchAgent (`KeepAlive: true`, `RunAtLoad: true`) |
-| **Ollama keepalive** | LaunchAgent (hourly curl ping keeps model in VRAM) |
-| **Cursor CLI** | On-demand (spawned per coding task) |
+| Step | Component | Mechanism | Needs login? |
+|------|-----------|-----------|:------------:|
+| 1 | **Mac reboots** | `pmset autorestart 1` | No |
+| 2 | **FileVault unlock** | User enters password at pre-boot screen | **Yes** |
+| 3 | **Ollama** | macOS Login Items (`Ollama.app`, hidden) | Yes |
+| 4 | **OpenClaw Gateway** | LaunchAgent (`KeepAlive: true`, `RunAtLoad: true`) | Yes |
+| 5 | **Ollama keepalive** | LaunchAgent (hourly curl ping keeps model in VRAM) | Yes |
+| 6 | **Cursor CLI** | On-demand (spawned per coding task) | — |
 
-Boot sequence: Mac starts → Ollama.app launches → LaunchAgent starts gateway → gateway connects WhatsApp → ready.
+After login: Ollama.app launches → LaunchAgent starts gateway → gateway connects WhatsApp → ready.
 
-If WhatsApp fails to reconnect after a network outage (gateway exhausts retries), restart manually:
+### FileVault limitation
+
+FileVault is enabled, which blocks auto-login. After a power outage the Mac reboots automatically but **waits at the FileVault password screen** until someone logs in. Only then do LaunchAgents and Login Items start.
+
+**Options to make recovery fully hands-free:**
+
+| Option | Security trade-off | Effort |
+|--------|--------------------|--------|
+| Disable FileVault (`sudo fdesetup disable`) + enable auto-login | No disk encryption | Low |
+| UPS (keeps Mac alive through short outages) | None — keeps FileVault | Hardware purchase |
+| Keep FileVault, accept manual password entry | None | Zero |
+
+### Verify power-failure settings
+
 ```bash
-openclaw gateway stop && openclaw gateway install
+pmset -g | grep autorestart        # Should show 1
+fdesetup status                    # FileVault on/off
+sudo defaults read /Library/Preferences/com.apple.loginwindow autoLoginUser 2>/dev/null
+launchctl list | grep openclaw     # LaunchAgent loaded?
 ```
+
+### After login — if gateway didn't start
+
+```bash
+openclaw gateway status                              # Check current state
+openclaw gateway stop && openclaw gateway install     # Force restart
+```
+
+## Logs & Debugging
+
+### Log files
+
+| File | Contents | Format |
+|------|----------|--------|
+| `~/.openclaw/logs/gateway.log` | Gateway stdout (connections, messages sent) | Plain text |
+| `~/.openclaw/logs/gateway.err.log` | Gateway stderr (errors, warnings, diagnostics) | Plain text |
+| `/tmp/openclaw/openclaw-YYYY-MM-DD.log` | Detailed daily log (all subsystems) | JSON (one object per line) |
+| `/tmp/openclaw/ollama-keepalive.log` | Ollama keepalive ping results | Plain text |
+| `~/.openclaw/logs/config-audit.jsonl` | Config change history | JSONL |
+
+### Live tailing
+
+```bash
+# Gateway activity (human-readable)
+tail -f ~/.openclaw/logs/gateway.log
+
+# Errors and warnings
+tail -f ~/.openclaw/logs/gateway.err.log
+
+# Both streams interleaved
+tail -f ~/.openclaw/logs/gateway.log ~/.openclaw/logs/gateway.err.log
+
+# Full structured log (today)
+tail -f /tmp/openclaw/openclaw-$(date +%Y-%m-%d).log
+```
+
+### Filtering the daily JSON log with jq
+
+```bash
+LOG=/tmp/openclaw/openclaw-$(date +%Y-%m-%d).log
+
+# Pretty-print the last 20 entries
+tail -20 "$LOG" | jq .
+
+# Errors only
+cat "$LOG" | jq 'select(._meta.logLevelName == "ERROR")'
+
+# Filter by subsystem (whatsapp, agent, gateway, cron, diagnostic, etc.)
+cat "$LOG" | jq 'select(."0" | test("whatsapp"))'
+
+# Agent runs — start, end, duration
+cat "$LOG" | jq 'select(."1" | tostring | test("embedded run"))'
+
+# Timestamps + one-line summary
+cat "$LOG" | jq -r '[.time, ._meta.logLevelName, ."0", (."1" | tostring)[:80]] | join(" | ")'
+```
+
+### Quick health checks
+
+```bash
+openclaw gateway status        # Service status + gateway probe
+openclaw doctor                # Full diagnostic (state, services, cleanup hints)
+openclaw health                # Gateway health endpoint
+ollama ps                      # Running models, VRAM usage, quantization
+launchctl list | grep openclaw # LaunchAgent status (exit code -15 = SIGTERM)
+```
+
+### Verbose foreground mode
+
+Stop the service and run the gateway in the foreground with full logging for deep debugging:
+
+```bash
+openclaw gateway stop
+openclaw gateway run --verbose          # All log levels to terminal
+openclaw gateway run --verbose --compact # Condensed WebSocket logs
+```
+
+Press `Ctrl+C` to stop, then `openclaw gateway install` to restore the background service.
 
 ## Troubleshooting
 
 | Problem | Fix |
 |---------|-----|
 | Gateway won't start | `openclaw gateway stop && openclaw gateway install` |
-| Model too slow | Check `ollama ps` — ensure <24GB usage and >80% GPU |
+| Model too slow | `ollama ps` — ensure <24 GB usage and >80% GPU |
 | WhatsApp disconnected | `openclaw whatsapp link` |
-| Agent not responding | Check `tail -50 /tmp/openclaw/openclaw-$(date +%Y-%m-%d).log` |
+| Agent not responding | `tail -50 ~/.openclaw/logs/gateway.err.log` |
 | Config broken | `cp ~/.openclaw/openclaw.json.bak ~/.openclaw/openclaw.json` |
 | Pairing required | `openclaw devices list` then `openclaw devices approve <id>` |
+| `web_search` needs Brave API key | `openclaw configure --section web` then restart gateway (see **Web search** in Setup) |
 
 ## Memory & State
 
