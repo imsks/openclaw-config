@@ -1,0 +1,58 @@
+{
+  "phone": "+918072937581",
+  "providers": [
+    {
+      "id": "local",
+      "label": "Local (Ollama qwen3:8b)",
+      "model": "ollama/qwen3:8b",
+      "provider": "ollama",
+      "skip_auth": true
+    },
+    {
+      "id": "groq",
+      "label": "Groq (Llama 3.3 70B)",
+      "model": "groq/llama-3.3-70b-versatile",
+      "provider": "groq",
+      "apiKey": "gsk_YOUR_GROQ_API_KEY_HERE"
+    },
+    {
+      "id": "openrouter",
+      "label": "OpenRouter (Claude Sonnet 4.6)",
+      "model": "openrouter/anthropic/claude-sonnet-4.6",
+      "provider": "openrouter",
+      "apiKey": "sk-or-v1-YOUR_OPENROUTER_API_KEY_HERE"
+    }
+  ],
+  "tests": [
+    {
+      "id": 1,
+      "name": "Simple WhatsApp Query",
+      "message": "What's the capital of Japan and what time zone is it in? Keep it brief.",
+      "timeout": 300
+    },
+    {
+      "id": 2,
+      "name": "Reasoning Prompt",
+      "message": "A farmer has 17 sheep. All but 9 die. How many sheep are left? Explain your reasoning step by step.",
+      "timeout": 300
+    },
+    {
+      "id": 3,
+      "name": "GitHub Skill (gh CLI)",
+      "message": "Check CI status on GitHub repo imsks/Rajniti. List the last 3 workflow runs using gh CLI.",
+      "timeout": 300
+    },
+    {
+      "id": 4,
+      "name": "Claude Code (read + summarize)",
+      "message": "Use Claude Code to read the README.md file in /Users/sacmini/Documents/Codebase/Personal/Rajniti and give me a 3-sentence summary of the project.",
+      "timeout": 300
+    },
+    {
+      "id": 5,
+      "name": "Exec (Cursor Agent)",
+      "message": "Run this shell command and show me the output: ls -la /Users/sacmini/Documents/Codebase/Personal/Rajniti/src/ | head -20",
+      "timeout": 300
+    }
+  ]
+}

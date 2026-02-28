@@ -45,6 +45,8 @@ openclaw onboard   # Follow wizard: local mode, ollama provider
 openclaw whatsapp link   # Scan QR with WhatsApp > Linked Devices
 ```
 
+**To relink to a different phone number**, see [Relink WhatsApp](#relink-whatsapp) below.
+
 ### 4. Auth GitHub
 
 ```bash
@@ -283,6 +285,118 @@ The agent reads `MEMORY.md` + recent daily logs each session to maintain continu
 
 **Add a workspace:** New entry in `agents.list` with its own `workspace` and `agentDir`. Each workspace gets independent AGENTS.md, TOOLS.md, USER.md, and memory.
 
+## Adding Models & Providers
+
+OpenClaw has a built-in catalog of 700+ models across providers (Groq, OpenRouter, Anthropic, etc.). To use a cloud model:
+
+### 1. Register the API key
+
+```bash
+# Paste token interactively — pipe it or type when prompted
+echo "gsk_YOUR_KEY" | openclaw models auth paste-token --provider groq
+echo "sk-or-v1-YOUR_KEY" | openclaw models auth paste-token --provider openrouter
+```
+
+`--provider` is required. Common values: `groq`, `openrouter`, `anthropic`, `google`, `openai`.
+
+### 2. Switch the default model
+
+```bash
+openclaw models set groq/llama-3.3-70b-versatile
+```
+
+### 3. Restart the gateway
+
+```bash
+openclaw gateway stop && openclaw gateway install
+```
+
+### Available models
+
+```bash
+openclaw models list                        # Currently configured models
+openclaw models list --all --json           # Full 700+ model catalog
+openclaw models list --all --provider groq  # Filter by provider
+openclaw models status                      # Show active model + auth state
+```
+
+### Benchmark across providers
+
+The test suite supports multi-provider comparison. Add providers to `test-providers.json`:
+
+```json
+{
+  "id": "groq",
+  "label": "Groq (Llama 3.3 70B)",
+  "model": "groq/llama-3.3-70b-versatile",
+  "provider": "groq",
+  "apiKey": "gsk_..."
+}
+```
+
+Then run:
+
+```bash
+./test-model.sh              # All providers
+./test-model.sh groq         # Single provider
+./test-model.sh --dry-run    # Preview without running
+```
+
+See `test-providers.example.json` for the full config format.
+
+## Relink WhatsApp
+
+To switch WhatsApp to a new phone number:
+
+### 1. Log out the current session
+
+```bash
+openclaw channels logout --channel whatsapp
+```
+
+This disconnects the existing linked device. You can also remove it manually from WhatsApp > Settings > Linked Devices on your old phone.
+
+### 2. Link the new number
+
+```bash
+openclaw channels login --channel whatsapp
+```
+
+Scan the QR code with the new phone's WhatsApp > Settings > Linked Devices > Link a Device.
+
+### 3. Update the allowlist
+
+Edit `~/.openclaw/openclaw.json` and change the phone number in `channels.whatsapp.allowFrom`:
+
+```bash
+openclaw config set channels.whatsapp.allowFrom '["+91NEW_NUMBER"]' --strict-json
+```
+
+Or edit the file directly — the relevant section:
+
+```json
+{
+  "channels": {
+    "whatsapp": {
+      "allowFrom": ["+91NEW_NUMBER"]
+    }
+  }
+}
+```
+
+### 4. Restart the gateway
+
+```bash
+openclaw gateway stop && openclaw gateway install
+```
+
+### 5. Verify
+
+```bash
+openclaw channels status --probe   # Should show whatsapp: connected
+openclaw gateway status            # RPC probe: ok
+```
+
 ## File Layout
 
 ```
@@ -307,7 +421,10 @@ The agent reads `MEMORY.md` + recent daily logs each session to maintain continu
 ~/Documents/Codebase/openclaw/  (this repo)
 ├── openclaw.json              # Synced config copy
 ├── sync-config.sh             # Manual sync script
-├── test-model.sh              # 5-test validation suite for model swaps
+├── test-model.sh              # Multi-provider benchmark runner
+├── test-providers.json        # Provider config with API keys (gitignored)
+├── test-providers.example.json # Template — copy and fill in keys
+├── test-results/              # Timestamped benchmark outputs (gitignored)
 ├── TODO.md                    # Roadmap and future plans
 └── README.md                  # This file
 ```
