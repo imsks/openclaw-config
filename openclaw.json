@@ -1,7 +1,7 @@
 {
   "meta": {
     "lastTouchedVersion": "2026.2.21-2",
-    "lastTouchedAt": "2026-02-28T07:10:59.778Z"
+    "lastTouchedAt": "2026-02-28T07:39:45.121Z"
   },
   "wizard": {
     "lastRunAt": "2026-02-28T07:08:55.773Z",
@@ -33,6 +33,40 @@
             "maxTokens": 4096
           }
         ]
+      },
+      "groq": {
+        "baseUrl": "https://api.groq.com/openai/v1",
+        "apiKey": "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",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "llama-3.3-70b-versatile",
+            "name": "Llama 3.3 70B Versatile",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "contextWindow": 131072,
+            "maxTokens": 8192
+          }
+        ]
+      },
+      "openrouter": {
+        "baseUrl": "https://openrouter.ai/api/v1",
+        "apiKey": "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",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "anthropic/claude-sonnet-4.6",
+            "name": "Claude Sonnet 4.6",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "contextWindow": 1000000,
+            "maxTokens": 16384
+          }
+        ]
       }
     }
   },
@@ -42,7 +76,9 @@
         "primary": "ollama/qwen3:8b"
       },
       "models": {
-        "ollama/qwen3:8b": {}
+        "ollama/qwen3:8b": {},
+        "groq/llama-3.3-70b-versatile": {},
+        "groq/meta-llama/llama-4-scout-17b-16e-instruct": {}
       },
       "workspace": "/Users/sacmini/.openclaw/workspace",
       "memorySearch": {

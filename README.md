@@ -261,6 +261,8 @@ Press `Ctrl+C` to stop, then `openclaw gateway install` to restore the backgroun
 | Config broken | `cp ~/.openclaw/openclaw.json.bak ~/.openclaw/openclaw.json` |
 | Pairing required | `openclaw devices list` then `openclaw devices approve <id>` |
 | `web_search` needs Brave API key | `openclaw configure --section web` then restart gateway (see **Web search** in Setup) |
+| **Context limit exceeded** | Set `agents.defaults.compaction.reserveTokensFloor` to 4000 or higher in `openclaw.json`, then restart gateway. Keeps a token buffer so compaction runs before hitting the model limit. |
+| **Tool call validation failed** (e.g. "github" was not in request.tools) | Usually caused by a tight context: the tool list gets trimmed. Increase `reserveTokensFloor` (see above) and/or start a fresh session (`/reset` or `/new` in chat). Ensure `commands.nativeSkills` is `auto` so skills like github are included. |
 
 ## Memory & State
 
