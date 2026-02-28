@@ -1,10 +1,10 @@
 {
   "meta": {
     "lastTouchedVersion": "2026.2.21-2",
-    "lastTouchedAt": "2026-02-28T06:55:44.796Z"
+    "lastTouchedAt": "2026-02-28T07:08:55.793Z"
   },
   "wizard": {
-    "lastRunAt": "2026-02-22T12:01:41.185Z",
+    "lastRunAt": "2026-02-28T07:08:55.773Z",
     "lastRunVersion": "2026.2.21-2",
     "lastRunCommand": "onboard",
     "lastRunMode": "local"
@@ -108,8 +108,8 @@
   },
   "channels": {
     "whatsapp": {
-      "dmPolicy": "allowlist",
-      "selfChatMode": true,
+      "dmPolicy": "disabled",
+      "selfChatMode": false,
       "allowFrom": [
         "+918072937581"
       ],

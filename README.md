@@ -42,7 +42,7 @@ openclaw onboard   # Follow wizard: local mode, ollama provider
 ### 3. Link WhatsApp
 
 ```bash
-openclaw whatsapp link   # Scan QR with WhatsApp > Linked Devices
+openclaw channels login --channel whatsapp   # Scan QR with WhatsApp > Linked Devices
 ```
 
 **To relink to a different phone number**, see [Relink WhatsApp](#relink-whatsapp) below.
@@ -256,7 +256,7 @@ Press `Ctrl+C` to stop, then `openclaw gateway install` to restore the backgroun
 |---------|-----|
 | Gateway won't start | `openclaw gateway stop && openclaw gateway install` |
 | Model too slow | `ollama ps` — ensure <24 GB usage and >80% GPU |
-| WhatsApp disconnected | `openclaw whatsapp link` |
+| WhatsApp disconnected | `openclaw channels login --channel whatsapp` |
 | Agent not responding | `tail -50 ~/.openclaw/logs/gateway.err.log` |
 | Config broken | `cp ~/.openclaw/openclaw.json.bak ~/.openclaw/openclaw.json` |
 | Pairing required | `openclaw devices list` then `openclaw devices approve <id>` |
