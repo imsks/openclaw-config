@@ -433,4 +433,4 @@ openclaw gateway status            # RPC probe: ok
 
 ## Future Plans
 
-See [TODO.md](./TODO.md) for the full roadmap including Notion integration, multi-workspace setup, and PR auto-review.
+See [TODO.md](./TODO.md) for the full roadmap including Notion integration, multi-workspace setup, and PR auto-review
