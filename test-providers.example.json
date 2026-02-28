@@ -10,17 +10,45 @@
     },
     {
       "id": "groq",
-      "label": "Groq (Llama 3.3 70B)",
-      "model": "groq/llama-3.3-70b-versatile",
+      "label": "Groq (Llama 4 Scout 17B)",
+      "model": "groq/meta-llama/llama-4-scout-17b-16e-instruct",
       "provider": "groq",
-      "apiKey": "gsk_YOUR_GROQ_API_KEY_HERE"
+      "config": {
+        "baseUrl": "https://api.groq.com/openai/v1",
+        "apiKey": "gsk_YOUR_GROQ_API_KEY_HERE",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "meta-llama/llama-4-scout-17b-16e-instruct",
+            "name": "Llama 4 Scout 17B",
+            "reasoning": false,
+            "input": ["text", "image"],
+            "contextWindow": 131072,
+            "maxTokens": 8192
+          }
+        ]
+      }
     },
     {
       "id": "openrouter",
       "label": "OpenRouter (Claude Sonnet 4.6)",
       "model": "openrouter/anthropic/claude-sonnet-4.6",
       "provider": "openrouter",
-      "apiKey": "sk-or-v1-YOUR_OPENROUTER_API_KEY_HERE"
+      "config": {
+        "baseUrl": "https://openrouter.ai/api/v1",
+        "apiKey": "sk-or-v1-YOUR_OPENROUTER_API_KEY_HERE",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "anthropic/claude-sonnet-4.6",
+            "name": "Claude Sonnet 4.6",
+            "reasoning": false,
+            "input": ["text"],
+            "contextWindow": 1000000,
+            "maxTokens": 16384
+          }
+        ]
+      }
     }
   ],
   "tests": [

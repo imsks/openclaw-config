@@ -37,16 +37,21 @@ Usage:
 
 Config file: test-providers.json (copy test-providers.example.json and fill in API keys)
 
-Provider config format:
+Provider config format (cloud providers need a "config" block):
   {
     "id": "groq",
-    "label": "Groq (Llama 3.3 70B)",
-    "model": "groq/llama-3.3-70b-versatile",
+    "label": "Groq (Llama 4 Scout 17B)",
+    "model": "groq/meta-llama/llama-4-scout-17b-16e-instruct",
     "provider": "groq",
-    "apiKey": "gsk_..."
+    "config": {
+      "baseUrl": "https://api.groq.com/openai/v1",
+      "apiKey": "gsk_...",
+      "api": "openai-completions",
+      "models": [{ "id": "meta-llama/llama-4-scout-17b-16e-instruct", ... }]
+    }
   }
 
-To add a new provider/model, just append another entry to the "providers" array.
+To add a new provider/model, append an entry to the "providers" array.
 EOF
   exit 0
 }
@@ -229,12 +234,14 @@ run_test() {
   echo ""
   echo "  ── Test $tnum: $tname ──"
 
-  local output
-  output=$($TIMEOUT_CMD "$ttimeout" openclaw agent \
+  local raw_file="$RESULTS_DIR/provider-${pidx}_test-${tnum}.json"
+  local parsed_file="$TMP_DIR/parsed_${pidx}_${tidx}"
+
+  $TIMEOUT_CMD "$ttimeout" openclaw agent \
     --to "$PHONE" \
     --message "$tmesg" \
     --deliver \
-    --json 2>&1) || {
+    --json > "$raw_file" 2>&1 || {
     echo "    ❌ FAIL — timed out or errored after ${ttimeout}s"
     result_put "$pidx" "$tidx" "status" "FAIL"
     result_put "$pidx" "$tidx" "dur" "0"
@@ -245,44 +252,57 @@ run_test() {
     return
   }
 
-  local status dur tokens_in tokens_out model_used text
-  eval "$(echo "$output" | python3 -c "
-import sys, json
+  # Parse the JSON output via python, writing to a temp file to avoid eval escaping issues
+  python3 - "$raw_file" "$parsed_file" << 'PARSE_EOF'
+import json, sys
+raw_file, parsed_file = sys.argv[1], sys.argv[2]
 try:
-    d = json.load(sys.stdin)
-    st = d.get('status', 'error')
-    r = d.get('result', {})
-    meta = r.get('meta', {})
-    am = meta.get('agentMeta', {})
-    usage = am.get('usage', {})
-    payloads = r.get('payloads', [{}])
-    txt = payloads[0].get('text', 'NO RESPONSE')[:300] if payloads else 'NO RESPONSE'
-    # shell-safe quoting
-    txt_safe = txt.replace(\"'\", \"'\\\\''\")
-    print(f\"status='{st}'\")
-    print(f\"dur='{meta.get(\\\"durationMs\\\", 0)}'\")
-    print(f\"tokens_in='{usage.get(\\\"input\\\", 0)}'\")
-    print(f\"tokens_out='{usage.get(\\\"output\\\", 0)}'\")
-    print(f\"model_used='{am.get(\\\"model\\\", \\\"unknown\\\")}'\")
-    print(f\"text='{txt_safe}'\")
+    d = json.load(open(raw_file))
+    r = d.get("result", {})
+    meta = r.get("meta", {})
+    am = meta.get("agentMeta", {})
+    usage = am.get("usage", {})
+    payloads = r.get("payloads", [{}])
+    txt = payloads[0].get("text", "NO RESPONSE")[:300] if payloads else "NO RESPONSE"
+    err = meta.get("error", {})
+    parsed = {
+        "status": d.get("status", "error"),
+        "dur": meta.get("durationMs", 0),
+        "tokens_in": usage.get("input", 0),
+        "tokens_out": usage.get("output", 0),
+        "model": am.get("model", "unknown"),
+        "text": txt,
+        "error_kind": err.get("kind", "") if isinstance(err, dict) else "",
+        "error_msg": err.get("message", "")[:200] if isinstance(err, dict) else "",
+    }
+    json.dump(parsed, open(parsed_file, "w"))
 except Exception as e:
-    print(\"status='error'\")
-    print(\"dur='0'\")
-    print(\"tokens_in='0'\")
-    print(\"tokens_out='0'\")
-    print(\"model_used='unknown'\")
-    print(f\"text='parse error: {e}'\")
-" 2>/dev/null)" || {
-    status="error"; dur="0"; tokens_in="0"; tokens_out="0"; model_used="unknown"; text="parse error"
-  }
+    json.dump({"status": "error", "dur": 0, "tokens_in": 0, "tokens_out": 0,
+               "model": "unknown", "text": f"parse error: {e}",
+               "error_kind": "parse", "error_msg": str(e)},
+              open(parsed_file, "w"))
+PARSE_EOF
+
+  local status dur tokens_in tokens_out model_used text error_kind
+  status=$(python3 -c "import json; print(json.load(open('$parsed_file'))['status'])")
+  dur=$(python3 -c "import json; print(json.load(open('$parsed_file'))['dur'])")
+  tokens_in=$(python3 -c "import json; print(json.load(open('$parsed_file'))['tokens_in'])")
+  tokens_out=$(python3 -c "import json; print(json.load(open('$parsed_file'))['tokens_out'])")
+  model_used=$(python3 -c "import json; print(json.load(open('$parsed_file'))['model'])")
+  text=$(python3 -c "import json; print(json.load(open('$parsed_file'))['text'][:200])")
+  error_kind=$(python3 -c "import json; print(json.load(open('$parsed_file')).get('error_kind',''))")
 
   local dur_s=0
   if [[ "$dur" =~ ^[0-9]+$ ]] && [[ "$dur" -gt 0 ]]; then
     dur_s=$(( dur / 1000 ))
   fi
 
-  if [[ "$status" == "ok" ]]; then
+  if [[ "$status" == "ok" && -z "$error_kind" ]]; then
     echo "    ✅ PASS  ${dur_s}s  in=${tokens_in} out=${tokens_out}  model=${model_used}"
+    result_put "$pidx" "$tidx" "status" "PASS"
+  elif [[ "$status" == "ok" && -n "$error_kind" ]]; then
+    echo "    ⚠️  WARN  status=ok but error=$error_kind"
+    echo "    ${text:0:120}..."
     result_put "$pidx" "$tidx" "status" "PASS"
   else
     echo "    ❌ FAIL  status=$status"
@@ -294,9 +314,6 @@ except Exception as e:
   result_put "$pidx" "$tidx" "tokens_out" "$tokens_out"
   result_put "$pidx" "$tidx" "model" "$model_used"
   result_put "$pidx" "$tidx" "text" "${text:0:200}"
-
-  # Save raw JSON output
-  echo "$output" > "$RESULTS_DIR/provider-${pidx}_test-${tnum}.json" 2>/dev/null || true
 }
 
 # ── Provider loop ────────────────────────────────────────────────────────────
@@ -306,7 +323,6 @@ for pidx in "${PROVIDER_INDICES[@]}"; do
   model=$(cfg_read "providers.$pidx.model")
   provider=$(cfg_read "providers.$pidx.provider")
   skip_auth=$(cfg_read "providers.$pidx.skip_auth" "false")
-  api_key=$(cfg_read "providers.$pidx.apiKey" "")
 
   echo ""
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -314,21 +330,35 @@ for pidx in "${PROVIDER_INDICES[@]}"; do
   echo "  Model:    $model"
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-  # Register API key for cloud providers
-  if [[ "$skip_auth" != "True" && "$skip_auth" != "true" && -n "$api_key" ]]; then
-    echo "  Registering API key for $provider..."
-    echo "$api_key" | openclaw models auth paste-token --provider "$provider" 2>&1 | head -3 || {
-      echo "  ⚠️  Failed to register API key for $provider — skipping"
-      for (( t=0; t<TEST_COUNT; t++ )); do
-        result_put "$pidx" "$t" "status" "SKIP"
-        result_put "$pidx" "$t" "dur" "0"
-        result_put "$pidx" "$t" "tokens_in" "0"
-        result_put "$pidx" "$t" "tokens_out" "0"
-        result_put "$pidx" "$t" "model" "$model"
-        result_put "$pidx" "$t" "text" "auth failed"
-      done
-      continue
-    }
+  skip_provider=false
+
+  # Inject provider config (baseUrl + apiKey + models) into openclaw.json
+  if [[ "$skip_auth" != "True" && "$skip_auth" != "true" ]]; then
+    has_config=$(cfg_read "providers.$pidx.config" "")
+    if [[ -n "$has_config" && "$has_config" != "" ]]; then
+      echo "  Injecting provider config for $provider..."
+      provider_json=$(python3 -c "
+import json, sys
+cfg = json.load(open(sys.argv[1]))
+print(json.dumps(cfg['providers'][int(sys.argv[2])]['config']))
+" "$CONFIG_FILE" "$pidx")
+      openclaw config set "models.providers.$provider" "$provider_json" --strict-json 2>&1 | head -3 || {
+        echo "  ⚠️  Failed to configure provider $provider — skipping"
+        skip_provider=true
+      }
+    fi
+  fi
+
+  if $skip_provider; then
+    for (( t=0; t<TEST_COUNT; t++ )); do
+      result_put "$pidx" "$t" "status" "SKIP"
+      result_put "$pidx" "$t" "dur" "0"
+      result_put "$pidx" "$t" "tokens_in" "0"
+      result_put "$pidx" "$t" "tokens_out" "0"
+      result_put "$pidx" "$t" "model" "$model"
+      result_put "$pidx" "$t" "text" "provider setup failed"
+    done
+    continue
   fi
 
   # Switch model
