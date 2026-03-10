@@ -123,3 +123,9 @@ for l in sys.stdin:
  except:pass
 "
 ```
+
+
+# ERROR
+- Rajniti % python3 scripts/run_politician_agent.py
+  NotFound: 404 models/gemini-3-pro is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+  21:54:55 | ERROR    | app.agents.base_agent | ✗ BaseAgent._run_llm_with_context failed (0.77s)
